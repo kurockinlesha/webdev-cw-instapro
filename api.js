@@ -56,7 +56,6 @@ export function loginUser({ login, password }) {
   });
 }
 
-// Загружает картинку в облако, возвращает url загруженной картинки
 export function uploadImage({ file }) {
   const data = new FormData();
   data.append("file", file);
@@ -66,5 +65,94 @@ export function uploadImage({ file }) {
     body: data,
   }).then((response) => {
     return response.json();
+  });
+}
+
+export function addPost({ description, imageUrl, token }) {
+  return fetch(postsHost, {
+  method: "POST",
+  body: JSON.stringify({
+    "description": description,
+    "imageUrl": imageUrl,
+  }),
+  headers: {
+    Authorization: token,
+  },
+  })
+  .then((response) => {
+    if (response.status === 201) {
+      return response.json();
+    }
+    if (response.status === 400) {
+      throw new Error('Вы не ввели описание картинки или не загрузили фотографию')
+    }
+  })
+  .catch((error) => {
+    console.warn(error);
+  });
+}
+
+export function getUserPosts({ id }) {
+  return fetch(postsHost + `/user-posts/${id}`, {
+    method: "GET",
+  })
+  .then((response) => {
+    if (response.status === 401) {
+      throw new Error("Нет авторизации");
+    }
+    return response.json();
+  })
+  .then((data) => {
+    return data.posts;
+  })
+  .catch((error) => {
+    console.warn(error);
+  });
+}
+
+export function addLike({ userIdLike, token}) {
+  return fetch(`${postsHost}/${userIdLike}/like`, {
+  method: "POST",
+  body: JSON.stringify({
+  }),
+  headers: {
+    Authorization: token,
+  },
+})
+  .then((response) => {
+    if (response.status === 200) {
+      console.log('data');
+      return response.json();
+    }
+    if (response.status === 400) {
+      throw new Error('Что-то пошло не так')
+    }
+  })
+  .catch((error) => {
+    console.warn(error);
+  });
+
+}
+
+export function delLike({ userIdLike, token }) {
+  return fetch(`${postsHost}/${userIdLike}/dislike`, {
+  method: "POST",
+  body: JSON.stringify({
+  }),
+  headers: {
+    Authorization: token,
+  },
+  })
+  .then((response) => {
+    if (response.status === 200) {
+      console.log('data')
+      return response.json();
+    }
+    if (response.status === 400) {
+      throw new Error('Что-то пошло не так')
+    }
+  })
+  .catch((error) => {
+    console.warn(error);
   });
 }
