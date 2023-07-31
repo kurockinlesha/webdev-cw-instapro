@@ -38,6 +38,10 @@ body::-webkit-scrollbar {
   display: none;
 }
 
+ul, li, ol {
+  list-style-type: none;
+}
+
 p {
   margin: 0;
 }
@@ -105,19 +109,6 @@ p {
 
 .input .-error {
   background-color: #fff;
-}
-
-.input-description {
-  height: 100%;
-  width: 100%;
-  box-sizing: border-box;
-  padding: 15px;
-  font-size: 14px;
-  line-height: 18px;
-  color: rgb(4, 18, 27);
-  border: none;
-  border-radius: 5px;
-  background-color: #e8e8e8;
 }
 
 .input:focus {

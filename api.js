@@ -1,5 +1,3 @@
-// Замени на свой, чтобы получить независимый от других набор данных.
-// "боевая" версия инстапро лежит в ключе prod
 const personalKey = "alexey-kurochkin";
 const baseHost = "https://webdev-hw-api.vercel.app";
 const postsHost = `${baseHost}/api/v1/${personalKey}/instapro`;
@@ -15,7 +13,6 @@ export function getPosts({ token }) {
       if (response.status === 401) {
         throw new Error("Нет авторизации");
       }
-
       return response.json();
     })
     .then((data) => {
@@ -56,6 +53,7 @@ export function loginUser({ login, password }) {
   });
 }
 
+// Загружает картинку в облако, возвращает url загруженной картинки
 export function uploadImage({ file }) {
   const data = new FormData();
   data.append("file", file);
@@ -68,11 +66,12 @@ export function uploadImage({ file }) {
   });
 }
 
+// Добавление поста в общую ленту
 export function addPost({ description, imageUrl, token }) {
   return fetch(postsHost, {
   method: "POST",
   body: JSON.stringify({
-    "description": description,
+    "description": description.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;"),
     "imageUrl": imageUrl,
   }),
   headers: {
@@ -92,9 +91,13 @@ export function addPost({ description, imageUrl, token }) {
   });
 }
 
-export function getUserPosts({ id }) {
+// Получение постов конкретного пользователя
+export function getUserPosts({ id , token}) {
   return fetch(postsHost + `/user-posts/${id}`, {
     method: "GET",
+    headers: {
+      Authorization: token,
+    },
   })
   .then((response) => {
     if (response.status === 401) {
@@ -110,6 +113,7 @@ export function getUserPosts({ id }) {
   });
 }
 
+// Возможность поставить лайк
 export function addLike({ userIdLike, token}) {
   return fetch(`${postsHost}/${userIdLike}/like`, {
   method: "POST",
@@ -121,19 +125,25 @@ export function addLike({ userIdLike, token}) {
 })
   .then((response) => {
     if (response.status === 200) {
-      console.log('data');
       return response.json();
     }
     if (response.status === 400) {
       throw new Error('Что-то пошло не так')
     }
+    if (response.status === 401) {
+      throw new Error('Авторизируйтесь, чтобы поставить лайк')
+    }
   })
   .catch((error) => {
+    if (error.message = 'Авторизируйтесь, чтобы поставить лайк') {
+      alert('Авторизируйтесь, чтобы поставить лайк')
+    }
     console.warn(error);
   });
 
 }
 
+// Возможность удалить лайк
 export function delLike({ userIdLike, token }) {
   return fetch(`${postsHost}/${userIdLike}/dislike`, {
   method: "POST",
@@ -145,7 +155,6 @@ export function delLike({ userIdLike, token }) {
   })
   .then((response) => {
     if (response.status === 200) {
-      console.log('data')
       return response.json();
     }
     if (response.status === 400) {

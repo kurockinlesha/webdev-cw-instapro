@@ -1,4 +1,4 @@
-import { getPosts , addPost, getUserPosts, addLike, delLike} from "./api.js";
+import { getPosts , addPost, getUserPosts} from "./api.js";
 import { renderAddPostPageComponent } from "./components/add-post-page-component.js";
 import { renderAuthPageComponent } from "./components/auth-page-component.js";
 import {
@@ -25,7 +25,6 @@ const getToken = () => {
   const token = user ? `Bearer ${user.token}` : undefined;
   return token;
 };
-
 
 export const logout = () => {
   user = null;
@@ -69,12 +68,21 @@ export const goToPage = (newPage, data) => {
     }
 
     if (newPage === USER_POSTS_PAGE) {
+      page = LOADING_PAGE;
+      renderApp();
+
       // TODO: реализовать получение постов юзера из API
       const id  = data.userId;
-      page = USER_POSTS_PAGE;
-      posts = [];
-      posts = getUserPosts({id});
-      return renderApp();
+      return getUserPosts( {id, token: getToken()} )
+      .then((userPosts) => {
+        page = USER_POSTS_PAGE;
+        posts = [];
+        posts = userPosts;
+        renderApp();
+      })
+      .catch((error) => {
+        console.error(error);
+      });
     }
 
     page = newPage;
