@@ -38,6 +38,10 @@ body::-webkit-scrollbar {
   display: none;
 }
 
+ul, li, ol {
+  list-style-type: none;
+}
+
 p {
   margin: 0;
 }

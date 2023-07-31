@@ -1,20 +1,19 @@
 import { formatDistanceToNow } from "date-fns";
 import { ru } from 'date-fns/locale';
-import { USER_POSTS_PAGE } from "../routes.js";
 import { renderHeaderComponent } from "./header-component.js";
-import { posts, goToPage } from "../index.js";
-import { addLike, delLike, getPosts} from "../api.js";
+import { posts } from "../index.js";
+import { addLike, delLike, getUserPosts} from "../api.js";
 
-export function renderPostsPageComponent({ appEl, token, findLikesPost = posts }) {
-  appEl.innerHTML = '<div id="app"></div>';
-
+export function renderUserPage({token, findLikesPost = posts}) {
+  const app = document.querySelector('#app');
+  app.innerHTML = '';
+  app.innerHTML = '<div id="app"></div>';
+  
   function renderPosts(post) {
-    const createDate = formatDistanceToNow(new Date(post.createdAt), { locale: ru });
-
     const likeIcon = post.isLiked ? "./assets/images/like-active.svg" : "./assets/images/like-not-active.svg";
     const likeMassiveUser = post.likes.length === 0 ? `0` : `${post.likes.length === 1 ? post.likes[0].name : `${post.likes[post.likes.length - 1].name} и еще ${post.likes.length - 1}`}`;
 
-
+    const createDate = formatDistanceToNow(new Date(post.createdAt), { locale: ru });
     const htmlPosts = `
       <li class="post">
       <div class="post-header" data-user-id="${post.user.id}">
@@ -25,13 +24,13 @@ export function renderPostsPageComponent({ appEl, token, findLikesPost = posts }
         <img class="post-image" src="${post.imageUrl}">
       </div>
       <div class="post-likes">
-      <button data-post-id="${post.id}" class="like-button">
-        <img src=${likeIcon}>
-      </button>
-      <p class="post-likes-text">
-        Нравится: <strong>${likeMassiveUser}</strong>
-      </p>
-  </div>
+        <button data-post-id="${post.id}" class="like-button">
+          <img src=${likeIcon}>
+        </button>
+        <p class="post-likes-text">
+          Нравится: <strong>${likeMassiveUser}</strong>
+        </p>
+      </div>
       <p class="post-text">
         <span class="user-name">${post.user.name}</span>
         ${post.description}
@@ -49,7 +48,7 @@ export function renderPostsPageComponent({ appEl, token, findLikesPost = posts }
     <div class="page-container">
       <div class="header-container"></div>
       <ul class="posts">
-        <!-- посты рендерятся из JS -->
+        <!-- посты постятся из JS-->
       </ul>
       </div>
     </div>
@@ -59,10 +58,11 @@ export function renderPostsPageComponent({ appEl, token, findLikesPost = posts }
   }
 
   function renderPage() {
-      renderContainer()
-      findLikesPost.forEach((post) => {
-        renderPosts(post)
-      })
+    renderContainer();
+  
+    findLikesPost.forEach((post) => {
+      renderPosts(post);
+    })
   }
 
   renderPage();
@@ -71,32 +71,24 @@ export function renderPostsPageComponent({ appEl, token, findLikesPost = posts }
     element: document.querySelector(".header-container"),
   });
 
-  // отслеживание id юзера при клике на его иконку профиля
-  for (let userEl of document.querySelectorAll(".post-header")) {
-    userEl.addEventListener("click", () => {
-      goToPage(USER_POSTS_PAGE, {
-        userId: userEl.dataset.userId,
-      });
-    });
-  }
-
   // отслеживание id лайка при клике на него для того, чтобы поставить/убрать лайк
   for (let userLike of document.querySelectorAll(".like-button")) {
     userLike.addEventListener("click", async function() {
         const userIdLike = userLike.dataset.postId;
-        const arrayPosts = await getPosts({ token });
+        const id = document.querySelector(".post-header").dataset.userId;
+        const arrayPosts = await getUserPosts({ id, token});
         const checkLiked = arrayPosts.find((item) => item.id === userIdLike);
 
         if (checkLiked.isLiked === true) {
-          await delLike({userIdLike, token}); 
-          findLikesPost = await getPosts({ token });
-          await renderPostsPageComponent({findLikesPost, appEl, token });
+          await delLike({userIdLike, token})
+          findLikesPost = await getUserPosts({ id, token })
+          await renderUserPage({ token, findLikesPost })
         }
         
         if (checkLiked.isLiked === false) {
           await addLike({userIdLike, token})
-          findLikesPost = await getPosts({ token });
-          await renderPostsPageComponent({findLikesPost, appEl, token });
+          findLikesPost = await getUserPosts({ id, token })
+          await renderUserPage({ token, findLikesPost })
         }
     });
   }
